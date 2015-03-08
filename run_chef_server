@@ -1,0 +1,18 @@
+#!/bin/bash -x
+
+# Based on https://github.com/tmc/dockerfiles/blob/master/chef-server/run_chef_server
+
+# See also https://docs.chef.io/install_server.html
+
+sysctl -w kernel.shmmax=17179869184 # for postgres
+/opt/opscode/embedded/bin/runsvdir-start &
+
+# I'm not sure this bit is correct for Chef 12.x
+
+if [ x"$(hostname)" != x"$(grep server_name /etc/opscode/chef-server-running.json | sed 's/.*\"\(.*\)\".*\"\(.*\)\".*/\2/')" ]; then
+	echo "Hostname changed, chef-server must be reconfigured"
+	chef-server-ctl reconfigure
+fi
+
+tail -F /opt/opscode/embedded/service/*/log/current
+
